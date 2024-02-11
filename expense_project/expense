@@ -2,9 +2,6 @@
 
 require 'pg'
 
-# Need an object
-CONNECTION = PG.connect(dbname: "expense")
-
 # commands
 def display_help()
   help_text = <<~HELP
@@ -21,36 +18,48 @@ def display_help()
   puts help_text
 end
 
-def list_expenses()
-  result = CONNECTION.exec('SELECT * FROM expenses;')
+class ExpenseData
+  def initialize
+    @connection = PG.connect(dbname: 'expense')
+  end
 
-  result.each do |row|
-    columns = [
-      row['id'].rjust(3),
-      row['created_on'].rjust(26),
-      row['amount'].rjust(8),
-      row['memo'],
-    ]
-    puts columns.join(' | ')
+  def list_expenses()
+    result = @connection.exec('SELECT * FROM expenses;')
+
+    result.each do |row|
+      columns = [
+        row['id'].rjust(3),
+        row['created_on'].rjust(26),
+        row['amount'].rjust(8),
+        row['memo'],
+      ]
+      puts columns.join(' | ')
+    end
+  end
+
+  def add_expense(amount, memo)
+    sql = 'INSERT INTO expenses (amount, memo) VALUES ($1, $2)'
+    @connection.exec_params(sql, [amount, memo])
   end
 end
 
-def add_expense(amount, memo)
-  sql =
-    "INSERT INTO expenses (amount, memo) VALUES ($1, $2)"
-  CONNECTION.exec_params(sql, [amount, memo])
-end
+class CLI
+  def initialize
+    @expense_data = ExpenseData.new
+  end
 
-# reading args from command line
-args = ARGV
+  def run(args = ARGV)
+    # Parameter Handling: reads args from command line
 
-if args.empty?
-  display_help
-else
-  command = args[0]
-  list_expenses if command == 'list'
-  if command == 'add'
-    abort 'You must provide an amount and memo.' unless (args[1] && args[2])
-    add_expense(args[1], args[2])
+    if args.empty?
+      display_help
+    else
+      command = args[0]
+      list_expenses if command == 'list'
+      if command == 'add'
+        abort 'You must provide an amount and memo.' unless (args[1] && args[2])
+        add_expense(args[1], args[2])
+      end
+    end
   end
 end
