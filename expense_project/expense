@@ -3,7 +3,7 @@
 require 'pg'
 
 # Need an object
-CONNECTION = PG.connect(dbname: database_name)
+CONNECTION = PG.connect(dbname: "expense")
 
 # commands
 def display_help()
@@ -37,8 +37,8 @@ end
 
 def add_expense(amount, memo)
   sql =
-    "INSERT INTO expenses (amount, memo) VALUES (#{amount}, '#{memo.gsub(/\'/, "''")}')"
-  CONNECTION.exec(sql)
+    "INSERT INTO expenses (amount, memo) VALUES ($1, $2)"
+  CONNECTION.exec_params(sql, [amount, memo])
 end
 
 # reading args from command line
