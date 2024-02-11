@@ -2,6 +2,7 @@
 
 require 'pg'
 
+# Need an object
 CONNECTION = PG.connect(dbname: database_name)
 
 # commands
