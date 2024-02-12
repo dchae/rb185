@@ -9,27 +9,57 @@ class ExpenseData
 
   def list_expenses()
     result = @connection.exec('SELECT * FROM expenses;')
-
-    result.each do |row|
-      columns = [
-        row['id'].rjust(3),
-        row['created_on'].rjust(26),
-        row['amount'].rjust(8),
-        row['memo'],
-      ]
-      puts columns.join(' | ')
-    end
+    display_table(result)
   end
 
   def add_expense(amount, memo)
     sql = 'INSERT INTO expenses (amount, memo) VALUES ($1, $2)'
     @connection.exec_params(sql, [amount, memo])
   end
+
+  def search(search_term)
+    sql = 'SELECT * FROM expenses WHERE memo ~ $1'
+    result = @connection.exec_params(sql, [search_term])
+    display_table(result)
+  end
+
+  def display_row(row)
+    columns = [row[0].rjust(3), row[3].rjust(26), row[1].rjust(8), row[2]]
+    puts columns.join(' | ')
+  end
+
+  def display_table(table)
+    display_row(table.fields)
+    separator = ['-' * 3, '-' * 26, '-' * 8, '-' * 32]
+    puts separator.join('-+-')
+    table.values.each { |row| display_row(row) }
+  end
 end
 
 class CLI
   def initialize
     @expense_data = ExpenseData.new
+  end
+
+  def run(args = ARGV)
+    # Parameter Handling: reads args from command line
+    command = args.shift
+    case command
+    when 'list'
+      @expense_data.list_expenses
+    when 'add'
+      amount, memo = args[0..1]
+      unless (amount && memo && args.size == 2)
+        abort 'You must provide an amount and memo.'
+      end
+      @expense_data.add_expense(amount, memo)
+    when 'search'
+      search_term = args[0]
+      abort 'You must provide a search term.' unless search_term
+      @expense_data.search(search_term)
+    else
+      display_help
+    end
   end
 
   def display_help()
@@ -45,20 +75,6 @@ class CLI
     search QUERY - list expenses with a matching memo field
     HELP
     puts help_text
-  end
-
-  def run(args = ARGV)
-    # Parameter Handling: reads args from command line
-    command = args.shift
-    case command
-    when 'list'
-      @expense_data.list_expenses
-    when 'add'
-      abort 'You must provide an amount and memo.' unless (args[1] && args[2])
-      @expense_data.add_expense(args[1], args[2])
-    else
-      display_help
-    end
   end
 end
 
