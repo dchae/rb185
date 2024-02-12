@@ -49,15 +49,15 @@ class CLI
 
   def run(args = ARGV)
     # Parameter Handling: reads args from command line
-    if args.empty?
-      display_help
+    command = args.shift
+    case command
+    when 'list'
+      @expense_data.list_expenses
+    when 'add'
+      abort 'You must provide an amount and memo.' unless (args[1] && args[2])
+      @expense_data.add_expense(args[1], args[2])
     else
-      command = args[0]
-      @expense_data.list_expenses if command == 'list'
-      if command == 'add'
-        abort 'You must provide an amount and memo.' unless (args[1] && args[2])
-        @expense_data.add_expense(args[1], args[2])
-      end
+      display_help
     end
   end
 end
