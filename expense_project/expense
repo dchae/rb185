@@ -2,22 +2,6 @@
 
 require 'pg'
 
-# commands
-def display_help()
-  help_text = <<~HELP
-    An expense recording system
-
-    Commands:
-
-    add AMOUNT MEMO - record a new expense
-    clear - delete all expenses
-    list - list all expenses
-    delete NUMBER - remove expense with id NUMBER
-    search QUERY - list expenses with a matching memo field
-    HELP
-  puts help_text
-end
-
 class ExpenseData
   def initialize
     @connection = PG.connect(dbname: 'expense')
@@ -48,18 +32,34 @@ class CLI
     @expense_data = ExpenseData.new
   end
 
+  def display_help()
+    help_text = <<~HELP
+    An expense recording system
+
+    Commands:
+
+    add AMOUNT MEMO - record a new expense
+    clear - delete all expenses
+    list - list all expenses
+    delete NUMBER - remove expense with id NUMBER
+    search QUERY - list expenses with a matching memo field
+    HELP
+    puts help_text
+  end
+
   def run(args = ARGV)
     # Parameter Handling: reads args from command line
-
     if args.empty?
       display_help
     else
       command = args[0]
-      list_expenses if command == 'list'
+      @expense_data.list_expenses if command == 'list'
       if command == 'add'
         abort 'You must provide an amount and memo.' unless (args[1] && args[2])
-        add_expense(args[1], args[2])
+        @expense_data.add_expense(args[1], args[2])
       end
     end
   end
 end
+
+CLI.new.run
