@@ -23,7 +23,17 @@ class ExpenseData
     display_table(result)
   end
 
-  private
+  def select_by_id(id)
+    sql = 'SELECT * FROM expenses WHERE id = $1'
+    @connection.exec_params(sql, [id])
+  end
+
+  def delete(id)
+    sql = 'DELETE from expenses WHERE id = $1'
+    @connection.exec_params(sql, [id])
+  end
+
+  # private
 
   def display_row(row)
     columns = [row[0].rjust(3), row[3].rjust(26), row[1].rjust(8), row[2]]
@@ -59,6 +69,17 @@ class CLI
       search_term = args[0]
       abort 'You must provide a search term.' unless search_term
       @expense_data.search(search_term)
+    when 'delete'
+      id = args[0]
+      candidate = @expense_data.select_by_id(id)
+      
+      if candidate.ntuples == 1
+        @expense_data.delete(id)
+        puts "The following expense has been deleted:"
+        @expense_data.display_row(candidate.values.first)
+      else
+        puts "There is no expense with the id '#{id}'."
+      end
     else
       display_help
     end
