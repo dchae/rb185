@@ -1,6 +1,7 @@
 #! /usr/bin/env ruby
 
 require 'pg'
+require 'io/console'
 
 class ExpenseData
   def initialize
@@ -33,6 +34,10 @@ class ExpenseData
     @connection.exec_params(sql, [id])
   end
 
+  def clear_expenses
+    sql = 'DELETE from expenses'
+    @connection.exec(sql)
+  end
   # private
 
   def display_row(row)
@@ -72,13 +77,20 @@ class CLI
     when 'delete'
       id = args[0]
       candidate = @expense_data.select_by_id(id)
-      
+
       if candidate.ntuples == 1
         @expense_data.delete(id)
-        puts "The following expense has been deleted:"
+        puts 'The following expense has been deleted:'
         @expense_data.display_row(candidate.values.first)
       else
         puts "There is no expense with the id '#{id}'."
+      end
+    when 'clear'
+      puts 'This will remove all expenses. Are you sure? (y/n)'
+      response = $stdin.getch.downcase
+      if response == 'y'
+        @expense_data.clear_expenses
+        puts 'All expenses have been deleted.'
       end
     else
       display_help
