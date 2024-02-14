@@ -38,6 +38,7 @@ class ExpenseData
     sql = 'DELETE from expenses'
     @connection.exec(sql)
   end
+
   # private
 
   def display_row(row)
@@ -46,10 +47,24 @@ class ExpenseData
   end
 
   def display_table(table)
+    row_count = table.ntuples
+    if row_count == 0
+      puts 'There are no expenses.'
+      return
+    end
+    puts "There #{row_count > 1 ? 'are' : 'is'} #{row_count} expense#{'s' if row_count > 1}."
     display_row(table.fields)
     separator = ['-' * 3, '-' * 26, '-' * 8, '-' * 32]
     puts separator.join('-+-')
     table.values.each { |row| display_row(row) }
+    display_total(table)
+  end
+
+  def display_total(table)
+    total = table.column_values(1).map(&:to_f).sum
+    separator = ['-' * 78]
+    puts separator
+    puts "Total #{format('%.2f', total).rjust(37)}"
   end
 end
 
