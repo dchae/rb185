@@ -61,7 +61,7 @@ class ExpenseData
   end
 
   def display_total(table)
-    total = table.column_values(1).map(&:to_f).sum
+    total = table.field_values("amount").map(&:to_f).sum
     separator = ['-' * 78]
     puts separator
     puts "Total #{format('%.2f', total).rjust(37)}"
